@@ -30,6 +30,9 @@ async function handleLogout() {
         <router-link to="/my-orders">My Orders</router-link>
         <span class="user-greeting">Hi, {{ authState.user?.name }}!</span>
         <button @click="handleLogout" class="btn-logout">Logout</button>
+        <router-link v-if="authState.user?.role === 'admin'" to="/admin" class="admin-link">
+             Admin Panel ⚙️
+        </router-link>
       </template>
 
       <!-- If Not Logged In -->
@@ -84,5 +87,12 @@ async function handleLogout() {
   padding: 0.4rem 0.8rem;
   border-radius: 4px;
   color: white !important;
+}
+.admin-link {
+  background-color: #f4a261;
+  color: #333 !important;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-weight: bold;
 }
 </style>

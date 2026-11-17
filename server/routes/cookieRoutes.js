@@ -31,4 +31,21 @@ router.post('/', authenticateUser, requireAdmin, async (req, res) => {
   }
 });
 
+// Toggle cookie availability (ADMIN ONLY)
+router.patch('/:id/toggle', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const cookie = await Cookie.findByPk(req.params.id);
+    if (!cookie) {
+      return res.status(404).json({ message: 'Cookie not found.' });
+    }
+
+    cookie.isAvailable = !cookie.isAvailable;
+    await cookie.save();
+
+    res.json({ message: 'Cookie availability updated', cookie });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

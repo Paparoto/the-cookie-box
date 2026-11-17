@@ -77,4 +77,40 @@ router.get('/my-orders', authenticateUser, async (req, res) => {
   }
 });
 
+const { requireAdmin } = require('../middleware/auth');
+// 3. GET ALL ORDERS (ADMIN ONLY)
+router.get('/all', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const orders = await Order.findAll({
+      include: [
+        { model: Cookie, through: { attributes: ['quantity', 'priceAtPurchase'] } },
+        { model: require('../models').User, attributes: ['name', 'email'] }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 4. UPDATE ORDER STATUS (ADMIN ONLY)
+router.patch('/:id/status', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const order = await Order.findByPk(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found.' });
+    }
+
+    order.status = status;
+    await order.save();
+
+    res.json({ message: 'Status updated successfully', order });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
