@@ -113,4 +113,25 @@ router.patch('/:id/status', authenticateUser, requireAdmin, async (req, res) => 
   }
 });
 
+// 5. DELETE AN ORDER (ADMIN ONLY)
+router.delete('/:id', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const order = await Order.findByPk(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found.' });
+    }
+
+    // 1. Delete associated items first (prevents Foreign Key Constraint errors)
+    await OrderItem.destroy({ where: { orderId: req.params.id } });
+
+    // 2. Delete the order
+    await order.destroy();
+
+    res.json({ message: 'Order deleted successfully!' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

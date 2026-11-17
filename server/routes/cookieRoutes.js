@@ -71,6 +71,30 @@ router.put('/reorder', authenticateUser, requireAdmin, async (req, res) => {
   }
 });
 
+// UPDATE / EDIT A COOKIE (ADMIN ONLY)
+router.put('/:id', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const { name, description, price, imageUrl, isAvailable } = req.body;
+    const cookie = await Cookie.findByPk(req.params.id);
+
+    if (!cookie) {
+      return res.status(404).json({ message: 'Cookie not found.' });
+    }
+
+    cookie.name = name ?? cookie.name;
+    cookie.description = description ?? cookie.description;
+    cookie.price = price ?? cookie.price;
+    cookie.imageUrl = imageUrl ?? cookie.imageUrl;
+    if (isAvailable !== undefined) cookie.isAvailable = isAvailable;
+
+    await cookie.save();
+
+    res.json({ message: 'Cookie updated successfully!', cookie });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // DELETE A COOKIE (ADMIN ONLY)
 router.delete('/:id', authenticateUser, requireAdmin, async (req, res) => {
   try {
