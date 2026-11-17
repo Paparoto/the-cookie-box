@@ -1,6 +1,7 @@
 <script setup>
 import { useRouter } from 'vue-router';
 import { authState } from '../stores/auth';
+import { cartState } from '../stores/cart';
 
 const router = useRouter();
 
@@ -19,8 +20,14 @@ async function handleLogout() {
       <router-link to="/">Home</router-link>
       <router-link to="/menu">Menu</router-link>
 
+      <!-- Cart indicator always visible -->
+      <router-link to="/cart">
+        Box 🛒 <span v-if="cartState.totalCount > 0">({{ cartState.totalCount }})</span>
+      </router-link>
+
       <!-- If Logged In -->
       <template v-if="authState.isAuthenticated">
+        <router-link to="/my-orders">My Orders</router-link>
         <span class="user-greeting">Hi, {{ authState.user?.name }}!</span>
         <button @click="handleLogout" class="btn-logout">Logout</button>
       </template>
@@ -34,6 +41,7 @@ async function handleLogout() {
   </nav>
 </template>
 
+<!-- styles stay the same -->
 <style scoped>
 .navbar {
   display: flex;

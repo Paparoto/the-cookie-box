@@ -6,6 +6,7 @@ require('dotenv').config();
 const { sequelize } = require('./models');
 const authRoutes = require('./routes/authRoutes');
 const cookieRoutes = require('./routes/cookieRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,6 +22,7 @@ app.use(cookieParser());           // Reads cookies from incoming requests
 // Register API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/cookies', cookieRoutes);
+app.use('/api/orders', orderRoutes); 
 
 // Root route
 app.get('/', (req, res) => {

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import api from '../api/axios';
+import { cartState } from '../stores/cart'; // <-- Import cart
 
 const cookies = ref([]);
 const loading = ref(true);
@@ -11,7 +12,7 @@ onMounted(async () => {
     const res = await api.get('/cookies');
     cookies.value = res.data;
   } catch (err) {
-    error.value = 'Failed to load cookies. Ensure the backend server is running.';
+    error.value = 'Failed to load cookies. Ensure backend is running.';
   } finally {
     loading.value = false;
   }
@@ -20,7 +21,13 @@ onMounted(async () => {
 
 <template>
   <div class="menu-page">
-    <h2>Our Freshly Baked Menu</h2>
+    <div class="header-row">
+      <h2>Our Freshly Baked Menu</h2>
+      <!-- Shows live item count in box -->
+      <router-link to="/cart" class="cart-pill">
+        🛒 My Box ({{ cartState.totalCount }})
+      </router-link>
+    </div>
 
     <p v-if="loading">Loading delicious cookies...</p>
     <p v-if="error" class="error-msg">{{ error }}</p>
@@ -33,7 +40,9 @@ onMounted(async () => {
           <p class="description">{{ cookie.description }}</p>
           <div class="bottom-row">
             <span class="price">${{ Number(cookie.price).toFixed(2) }}</span>
-            <button class="add-btn">Add to Box</button>
+            <button @click="cartState.addItem(cookie)" class="add-btn">
+              + Add to Box
+            </button>
           </div>
         </div>
       </div>
@@ -42,9 +51,22 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
 h2 {
   color: #5c3d2e;
-  margin-bottom: 1.5rem;
+}
+.cart-pill {
+  background-color: #2a9d8f;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  text-decoration: none;
+  font-weight: bold;
 }
 .cookie-grid {
   display: grid;
@@ -93,6 +115,10 @@ h2 {
   padding: 0.5rem 0.8rem;
   border-radius: 4px;
   cursor: pointer;
+  transition: background 0.2s;
+}
+.add-btn:hover {
+  background: #e76f51;
 }
 .error-msg {
   color: red;
