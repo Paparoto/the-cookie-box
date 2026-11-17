@@ -1,5 +1,5 @@
 const express = require('express');
-const { Cookie } = require('../models');
+const { Cookie, OrderItem } = require('../models');
 const { authenticateUser, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
@@ -43,6 +43,21 @@ router.patch('/:id/toggle', authenticateUser, requireAdmin, async (req, res) => 
     await cookie.save();
 
     res.json({ message: 'Cookie availability updated', cookie });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE A COOKIE (ADMIN ONLY)
+router.delete('/:id', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const cookie = await Cookie.findByPk(req.params.id);
+    if (!cookie) {
+      return res.status(404).json({ message: 'Cookie not found.' });
+    }
+
+    await cookie.destroy();
+    res.json({ message: 'Cookie deleted successfully!' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
