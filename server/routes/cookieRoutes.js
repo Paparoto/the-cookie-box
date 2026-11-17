@@ -7,7 +7,9 @@ const router = express.Router();
 // Public: Get all available cookies for the menu
 router.get('/', async (req, res) => {
   try {
-    const cookies = await Cookie.findAll();
+    const cookies = await Cookie.findAll({
+      order: [['displayOrder', 'ASC'], ['id', 'ASC']]
+    });
     res.json(cookies);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -43,6 +45,27 @@ router.patch('/:id/toggle', authenticateUser, requireAdmin, async (req, res) => 
     await cookie.save();
 
     res.json({ message: 'Cookie availability updated', cookie });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// REORDER COOKIES (ADMIN ONLY)
+router.put('/reorder', authenticateUser, requireAdmin, async (req, res) => {
+  try {
+    const { orderedIds } = req.body; // Array of IDs in their new order: [3, 1, 4, 2]
+
+    if (!Array.isArray(orderedIds)) {
+      return res.status(400).json({ message: 'orderedIds array is required.' });
+    }
+
+    // Update displayOrder for each cookie in MySQL
+    const updates = orderedIds.map((id, index) =>
+      Cookie.update({ displayOrder: index }, { where: { id } })
+    );
+    await Promise.all(updates);
+
+    res.json({ message: 'Menu order updated successfully!' });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

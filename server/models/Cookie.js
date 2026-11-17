@@ -19,6 +19,10 @@ const Cookie = sequelize.define('Cookie', {
   isAvailable: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
+  },
+  displayOrder: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   }
 });
 

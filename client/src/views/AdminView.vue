@@ -91,6 +91,30 @@ async function updateStatus(orderId, newStatus) {
   }
 }
 
+let draggedIndex = null;
+
+function onDragStart(index) {
+  draggedIndex = index;
+}
+
+async function onDrop(targetIndex) {
+  if (draggedIndex === null || draggedIndex === targetIndex) return;
+
+  // Move the item locally in the Vue reactive array
+  const movedItem = cookies.value.splice(draggedIndex, 1)[0];
+  cookies.value.splice(targetIndex, 0, movedItem);
+  draggedIndex = null;
+
+  // Send the new order of IDs to the backend to persist in MySQL
+  try {
+    const orderedIds = cookies.value.map(c => c.id);
+    await api.put('/cookies/reorder', { orderedIds });
+  } catch (err) {
+    console.error('Failed to save order', err);
+    alert('Failed to save order to database.');
+  }
+}
+
 onMounted(fetchData);
 </script>
 
@@ -157,30 +181,39 @@ onMounted(fetchData);
           <h3>Current Menu ({{ cookies.length }})</h3>
 
           <div class="cookie-items">
-            <div v-for="cookie in cookies" :key="cookie.id" class="cookie-row">
-              <img :src="cookie.imageUrl" :alt="cookie.name" class="cookie-thumb" />
+            <div 
+                v-for="(cookie, index) in cookies" 
+                :key="cookie.id" 
+                class="cookie-row draggable"
+                draggable="true"
+                @dragstart="onDragStart(index)"
+                @dragover.prevent
+                @drop="onDrop(index)"
+            >
+                <!-- Visual Drag Handle Icon -->
+                <span class="drag-handle" title="Drag to reorder">☰</span>
 
-              <div class="cookie-details">
+                <img :src="cookie.imageUrl" :alt="cookie.name" class="cookie-thumb" />
+
+                <div class="cookie-details">
                 <h4>{{ cookie.name }}</h4>
                 <span class="price">${{ Number(cookie.price).toFixed(2) }}</span>
-              </div>
+                </div>
 
-              <div class="actions">
-                <!-- Stock Toggle -->
+                <div class="actions">
                 <button 
-                  :class="['toggle-btn', cookie.isAvailable ? 'btn-available' : 'btn-disabled']"
-                  @click="toggleCookie(cookie.id)"
+                    :class="['toggle-btn', cookie.isAvailable ? 'btn-available' : 'btn-disabled']"
+                    @click="toggleCookie(cookie.id)"
                 >
-                  {{ cookie.isAvailable ? 'In Stock' : 'Out of Stock' }}
+                    {{ cookie.isAvailable ? 'In Stock' : 'Out of Stock' }}
                 </button>
 
-                <!-- Delete -->
                 <button @click="deleteCookie(cookie.id)" class="btn-delete" title="Delete Cookie">
-                  🗑️
+                    🗑️
                 </button>
-              </div>
+                </div>
             </div>
-          </div>
+        </div>
         </div>
 
       </div>
@@ -322,4 +355,23 @@ onMounted(fetchData);
 .badge.ready { background: #55efc4; color: #00b894; }
 .badge.completed { background: #b2bec3; color: #2d3436; }
 select { padding: 0.4rem; border-radius: 4px; border: 1px solid #ccc; }
+.cookie-row.draggable {
+  cursor: grab;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.cookie-row.draggable:active {
+  cursor: grabbing;
+  opacity: 0.6;
+  background-color: #f7ede2;
+}
+.drag-handle {
+  font-size: 1.3rem;
+  color: #aaa;
+  cursor: grab;
+  margin-right: 0.5rem;
+  user-select: none;
+}
+.drag-handle:hover {
+  color: #5c3d2e;
+}
 </style>
